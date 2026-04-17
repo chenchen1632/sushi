@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>与苏东坡对话</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --gold:#daa520;--gold-dim:rgba(218,165,32,.15);--gold-mid:rgba(218,165,32,.3);
+    --cream:#e8d5b7;--cream-dim:rgba(232,213,183,.5);--cream-faint:rgba(232,213,183,.3);
+    --bg1:#0f0c29;--bg2:#1a1040;--bg3:#24243e;
+    --glass:rgba(26,26,56,.55);--glass2:rgba(15,12,41,.7);
+  }
+
+  body{
+    font-family:'Noto Serif SC','SimSun',serif;
+    background:var(--bg1);min-height:100vh;color:var(--cream);overflow:hidden;
+  }
+
+  /* ===== 多层背景 ===== */
+  .bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-grad{background:radial-gradient(ellipse at 20% 50%,rgba(139,92,42,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(70,40,120,.1) 0%,transparent 50%),radial-gradient(ellipse at 50% 100%,rgba(218,165,32,.06) 0%,transparent 40%),linear-gradient(160deg,var(--bg1),var(--bg2),var(--bg3))}
+  .bg-glow{position:fixed;border-radius:50%;filter:blur(80px);opacity:.4;animation:glowDrift 20s ease-in-out infinite alternate}
+  .glow1{width:400px;height:400px;background:rgba(218,165,32,.08);top:-10%;left:10%;animation-delay:0s}
+  .glow2{width:350px;height:350px;background:rgba(100,60,160,.08);bottom:-5%;right:5%;animation-delay:-7s}
+  .glow3{width:300px;height:300px;background:rgba(42,100,120,.06);top:40%;right:30%;animation-delay:-14s}
+  @keyframes glowDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.1)}100%{transform:translate(-20px,15px) scale(.95)}}
+
+  /* 粒子 */
+  .particles{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .particle{position:absolute;border-radius:50%;animation:pfloat linear infinite;opacity:0}
+  @keyframes pfloat{0%{transform:translateY(105vh) translateX(0) scale(0);opacity:0}5%{opacity:1}95%{opacity:.6}100%{transform:translateY(-5vh) translateX(40px) scale(1);opacity:0}}
+
+  /* ===== 布局 ===== */
+  .container{position:relative;z-index:2;display:flex;height:100vh;max-width:1480px;margin:0 auto;padding:24px;gap:28px}
+
+  /* ===== 左侧 ===== */
+  .left-panel{
+    flex:0 0 370px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;
+    position:relative;
+  }
+
+  /* 古风装饰框 */
+  .portrait-wrap{position:relative}
+  .portrait-wrap::before,.portrait-wrap::after{
+    content:'';position:absolute;width:28px;height:28px;border-color:var(--gold-mid);border-style:solid;z-index:1;
+  }
+  .portrait-wrap::before{top:-6px;left:-6px;border-width:2px 0 0 2px;border-radius:4px 0 0 0}
+  .portrait-wrap::after{bottom:-6px;right:-6px;border-width:0 2px 2px 0;border-radius:0 0 4px 0}
+
+  .portrait{
+    width:280px;height:340px;border-radius:20px;overflow:hidden;
+    box-shadow:0 0 60px rgba(218,165,32,.08),0 25px 50px rgba(0,0,0,.4);
+    border:1.5px solid var(--gold-dim);
+    background:linear-gradient(135deg,#2c1810,#3d2a1a,#2c1810);
+    position:relative;
+  }
+  .portrait img{width:100%;height:100%;object-fit:cover;display:block}
+
+  /* 装饰竖线 */
+  .deco-line{
+    width:1px;height:40px;
+    background:linear-gradient(180deg,transparent,var(--gold-mid),transparent);
+  }
+
+  .name-area{text-align:center}
+  .name-area h2{
+    font-size:34px;font-weight:700;color:var(--gold);
+    text-shadow:0 0 24px rgba(218,165,32,.25);
+    letter-spacing:14px;
+  }
+  .name-area .sub{font-size:13px;color:var(--cream-dim);margin-top:6px;letter-spacing:4px}
+
+  .status-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--cream-dim)}
+  .dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px rgba(74,222,128,.4)}50%{opacity:.4;box-shadow:none}}
+  .dot.err{background:#f87171;animation:none}
+
+  .hint-text{
+    font-size:13px;color:rgba(232,213,183,.4);text-align:center;max-width:260px;line-height:1.6;
+    animation:breathe 4s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.4;transform:translateY(0)}50%{opacity:.65;transform:translateY(-2px)}}
+
+  /* ===== 右侧 ===== */
+  .chat-panel{
+    flex:1;display:flex;flex-direction:column;
+    background:var(--glass);backdrop-filter:blur(24px);
+    border-radius:24px;border:1px solid var(--gold-dim);
+    box-shadow:0 24px 64px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.03);
+    overflow:hidden;
+  }
+
+  .chat-hd{
+    padding:18px 24px;
+    background:linear-gradient(135deg,rgba(218,165,32,.06),transparent);
+    border-bottom:1px solid rgba(218,165,32,.08);
+    display:flex;align-items:center;gap:12px;
+  }
+  .av-sm{width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid var(--gold-mid);flex-shrink:0}
+  .av-sm img{width:100%;height:100%;object-fit:cover}
+  .hd-info h3{font-size:18px;color:var(--gold);font-weight:600;letter-spacing:2px}
+  .hd-info p{font-size:11px;color:var(--cream-dim);margin-top:2px;letter-spacing:1px}
+  .settings-btn{
+    margin-left:auto;background:rgba(218,165,32,.08);border:1px solid rgba(218,165,32,.18);
+    color:var(--cream-dim);padding:6px 16px;border-radius:18px;font-size:12px;
+    cursor:pointer;font-family:inherit;transition:all .3s;letter-spacing:1px;
+  }
+  .settings-btn:hover{background:rgba(218,165,32,.18);color:var(--gold);border-color:var(--gold-mid)}
+
+  /* 聊天区 */
+  .chat-body{
+    flex:1;overflow-y:auto;padding:22px 24px;
+    display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;
+  }
+  .chat-body::-webkit-scrollbar{width:5px}
+  .chat-body::-webkit-scrollbar-track{background:transparent}
+  .chat-body::-webkit-scrollbar-thumb{background:rgba(218,165,32,.15);border-radius:3px}
+  .chat-body::-webkit-scrollbar-thumb:hover{background:rgba(218,165,32,.25)}
+
+  /* 消息 */
+  .msg{display:flex;gap:10px;max-width:80%;animation:msgIn .35s ease-out}
+  @keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .msg.s{align-self:flex-start}.msg.u{align-self:flex-end;flex-direction:row-reverse}
+
+  .msg .av{width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden}
+  .msg.s .av{border:1.5px solid var(--gold-mid)}
+  .msg.s .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+  .msg.u .av{background:linear-gradient(135deg,#1a5276,#2980b9);display:flex;align-items:center;justify-content:center;color:#a8d8ea;font-size:14px;border:1px solid rgba(168,216,234,.25)}
+
+  .bubble{
+    padding:12px 16px;border-radius:18px;line-height:1.85;font-size:14.5px;
+    word-break:break-word;white-space:pre-wrap;position:relative;
+  }
+  .msg.s .bubble{
+    background:linear-gradient(135deg,rgba(92,64,51,.35),rgba(80,55,40,.25));
+    border:1px solid rgba(218,165,32,.1);
+    border-radius:4px 18px 18px 18px;color:var(--cream);
+  }
+  .msg.u .bubble{
+    background:linear-gradient(135deg,rgba(41,128,185,.25),rgba(26,82,118,.2));
+    border:1px solid rgba(168,216,234,.1);
+    border-radius:18px 4px 18px 18px;color:#a8d8ea;
+  }
+
+  /* 语音朗读按钮 */
+  .tts-btn{
+    position:absolute;bottom:6px;right:8px;
+    width:28px;height:28px;border-radius:50%;
+    background:rgba(218,165,32,.12);border:1px solid rgba(218,165,32,.2);
+    color:var(--gold);font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transition:all .3s;padding:0;
+  }
+  .msg.s .bubble:hover .tts-btn{opacity:.8}
+  .tts-btn:hover{opacity:1!important;background:rgba(218,165,32,.25);transform:scale(1.1)}
+  .tts-btn.playing{opacity:1!important;animation:ttsGlow 1.5s ease-in-out infinite}
+  @keyframes ttsGlow{0%,100%{box-shadow:0 0 0 0 rgba(218,165,32,.3)}50%{box-shadow:0 0 8px 2px rgba(218,165,32,.2)}}
+
+  /* 思考指示器 - 无头像，简洁三点 */
+  .typing{
+    display:none;align-self:flex-start;
+    padding:4px 24px 8px;
+  }
+  .typing.show{display:flex}
+  .typing-inner{
+    display:flex;align-items:center;gap:6px;
+    padding:10px 18px;
+    background:linear-gradient(135deg,rgba(92,64,51,.3),rgba(80,55,40,.2));
+    border:1px solid rgba(218,165,32,.1);
+    border-radius:18px;
+  }
+  .thinking-text{font-size:12px;color:rgba(232,213,183,.4);margin-right:4px;letter-spacing:2px}
+  .typing-inner span{
+    width:5px;height:5px;background:rgba(218,165,32,.5);border-radius:50%;
+    animation:tb 1.4s infinite;
+  }
+  .typing-inner span:nth-child(2){animation-delay:.2s}
+  .typing-inner span:nth-child(3){animation-delay:.4s}
+  @keyframes tb{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+
+  /* 输入区 */
+  .input-area{
+    padding:16px 20px;
+    border-top:1px solid rgba(218,165,32,.06);
+    background:rgba(10,8,28,.5);
+  }
+  .qas{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .qb{
+    padding:5px 14px;background:rgba(218,165,32,.06);
+    border:1px solid rgba(218,165,32,.15);border-radius:20px;
+    color:var(--cream-dim);font-size:12.5px;cursor:pointer;
+    transition:all .3s;font-family:inherit;letter-spacing:1px;
+  }
+  .qb:hover{background:rgba(218,165,32,.18);color:var(--gold);border-color:var(--gold-mid);transform:translateY(-1px)}
+
+  .irow{display:flex;gap:10px;align-items:center}
+  .cinput{
+    flex:1;padding:12px 18px;
+    background:rgba(15,12,41,.6);
+    border:1px solid rgba(218,165,32,.12);border-radius:28px;
+    color:var(--cream);font-size:15px;font-family:inherit;
+    outline:none;transition:all .3s;letter-spacing:1px;
+  }
+  .cinput::placeholder{color:var(--cream-faint)}
+  .cinput:focus{border-color:rgba(218,165,32,.35);box-shadow:0 0 16px rgba(218,165,32,.08)}
+  .sbtn{
+    width:48px;height:48px;border-radius:50%;border:none;
+    background:linear-gradient(135deg,#daa520,#b8860b);
+    color:#1a1a2e;font-size:18px;cursor:pointer;
+    transition:all .3s;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 12px rgba(218,165,32,.15);
+  }
+  .sbtn:hover{transform:scale(1.06);box-shadow:0 4px 20px rgba(218,165,32,.25)}
+  .sbtn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* 设置弹窗 */
+  .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center}
+  .overlay.show{display:flex}
+  .modal{
+    background:linear-gradient(135deg,#1a1040,#24243e);
+    border:1px solid rgba(218,165,32,.2);border-radius:24px;
+    padding:30px;max-width:500px;width:90%;
+    box-shadow:0 24px 64px rgba(0,0,0,.5);
+  }
+  .modal h3{color:var(--gold);font-size:20px;margin-bottom:14px;letter-spacing:2px}
+  .modal p{color:rgba(232,213,183,.5);font-size:12.5px;line-height:1.7;margin-bottom:14px}
+  .modal label{color:rgba(232,213,183,.6);font-size:12.5px;display:block;margin-bottom:5px;margin-top:12px}
+  .modal input{
+    width:100%;padding:10px 14px;
+    background:rgba(15,12,41,.6);border:1px solid rgba(218,165,32,.18);
+    border-radius:12px;color:var(--cream);font-size:13px;font-family:inherit;outline:none;
+  }
+  .modal input:focus{border-color:rgba(218,165,32,.4)}
+  .modal .tip{font-size:11px;color:rgba(232,213,183,.35);margin-top:4px;line-height:1.5}
+  .mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .mactions button{padding:9px 22px;border-radius:12px;font-family:inherit;font-size:13px;cursor:pointer;border:none;transition:all .3s;letter-spacing:1px}
+  .bcnl{background:rgba(255,255,255,.08);color:var(--cream-dim)}.bcnl:hover{background:rgba(255,255,255,.12)}
+  .bcns{background:linear-gradient(135deg,#daa520,#b8860b);color:#1a1a2e;font-weight:600}.bcns:hover{box-shadow:0 0 16px rgba(218,165,32,.3)}
+
+  /* 提示条 */
+  .toast{
+    position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-10px);
+    padding:10px 28px;border-radius:14px;font-size:13px;z-index:300;
+    animation:toastIn .35s ease-out;pointer-events:none;letter-spacing:1px;
+  }
+  .toast.err{background:rgba(220,60,60,.85);color:#fff}
+  .toast.ok{background:rgba(34,160,90,.85);color:#fff}
+  @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+  /* 朗读状态全局指示 */
+  .tts-status{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:rgba(218,165,32,.15);border:1px solid rgba(218,165,32,.25);
+    backdrop-filter:blur(10px);
+    padding:8px 20px;border-radius:20px;font-size:12px;color:var(--gold);
+    z-index:100;display:none;align-items:center;gap:8px;letter-spacing:1px;
+  }
+  .tts-status.show{display:flex}
+  .tts-status .wave{display:flex;gap:2px;align-items:center}
+  .tts-status .wave span{width:3px;background:var(--gold);border-radius:2px;animation:wave 1s ease-in-out infinite}
+  .tts-status .wave span:nth-child(1){height:8px;animation-delay:0s}
+  .tts-status .wave span:nth-child(2){height:14px;animation-delay:.15s}
+  .tts-status .wave span:nth-child(3){height:10px;animation-delay:.3s}
+  .tts-status .wave span:nth-child(4){height:16px;animation-delay:.45s}
+  .tts-status .wave span:nth-child(5){height:8px;animation-delay:.6s}
+  @keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+  @media(max-width:900px){
+    .container{flex-direction:column;overflow-y:auto;padding:16px;gap:16px}
+    .left-panel{flex:0 0 auto;padding:10px 0;gap:12px}
+    .portrait{width:160px;height:190px}
+    .portrait-wrap::before,.portrait-wrap::after{display:none}
+    .name-area h2{font-size:26px;letter-spacing:8px}
+    .deco-line,.hint-text{display:none}
+    .chat-panel{min-height:500px}
+  }
+</style>
+</head>
+<body>
+
+<!-- 多层背景 -->
+<div class="bg-layer bg-grad"></div>
+<div class="bg-glow glow1"></div>
+<div class="bg-glow glow2"></div>
+<div class="bg-glow glow3"></div>
+<div class="particles" id="particles"></div>
+
+<!-- 朗读状态条 -->
+<div class="tts-status" id="ttsStatus">
+  <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
+  <span id="ttsStatusText">朗读中...</span>
+  <button style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:14px;margin-left:4px" onclick="stopTTS()">■</button>
+</div>
+
+<!-- 提示条 -->
+<div class="toast err" id="toast" style="display:none"></div>
+
+<div class="container">
+  <!-- 左侧人物 -->
+  <div class="left-panel">
+    <div class="portrait-wrap">
+      <div class="portrait"><img id="portraitImg" alt="苏东坡"></div>
+    </div>
+    <div class="deco-line"></div>
+    <div class="name-area">
+      <h2>苏 轼</h2>
+      <div class="sub">字子瞻 · 号东坡居士</div>
+    </div>
+    <div class="status-bar">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">AI 已连接</span>
+    </div>
+    <div class="hint-text" id="hintText">无所不知，问什么答什么～</div>
+  </div>
+
+  <!-- 右侧对话 -->
+  <div class="chat-panel">
+    <div class="chat-hd">
+      <div class="av-sm"><img id="hdAvatar" alt=""></div>
+      <div class="hd-info">
+        <h3>苏东坡</h3>
+        <p>AI 智能体 · 随便问</p>
+      </div>
+      <button class="settings-btn" onclick="toggleModal()">设置</button>
+    </div>
+
+    <div class="chat-body" id="chatBody"></div>
+
+    <!-- 思考指示：无头像，简洁 -->
+    <div class="typing" id="typingInd">
+      <div class="typing-inner">
+        <span class="thinking-text">东坡思考中</span>
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="qas">
+        <button class="qb" onclick="qs('给我吟首诗')">吟首诗</button>
+        <button class="qb" onclick="qs('东坡肉怎么做')">东坡肉</button>
+        <button class="qb" onclick="qs('讲讲你的一生')">一生故事</button>
+        <button class="qb" onclick="qs('你和王安石什么关系')">王安石</button>
+        <button class="qb" onclick="qs('地球为什么是圆的')">随便问</button>
+        <button class="qb" onclick="qs('1+1等于几')">算术题</button>
+      </div>
+      <div class="irow">
+        <input type="text" class="cinput" id="ci" placeholder="随便问东坡先生任何问题..." onkeydown="if(event.key==='Enter')send()">
+        <button class="sbtn" id="sb" onclick="send()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h3>AI 接口设置</h3>
+    <p>页面默认使用智谱 GLM-4-Flash（完全免费），你也可以换成其他 OpenAI 兼容接口（豆包、通义、DeepSeek 等）。</p>
+    <label>API 地址</label>
+    <input type="text" id="mUrl" placeholder="https://open.bigmodel.cn/api/paas/v4/chat/completions">
+    <div class="tip">智谱: https://open.bigmodel.cn/api/paas/v4/chat/completions</div>
+    <label>API Key</label>
+    <input type="text" id="mKey" placeholder="你的 API Key">
+    <div class="tip">去 open.bigmodel.cn 注册即可免费获取（GLM-4-Flash 永久免费）</div>
+    <label>模型名称</label>
+    <input type="text" id="mModel" placeholder="glm-4-flash" value="glm-4-flash">
+    <div class="tip">智谱免费: glm-4-flash | 通义: qwen-turbo | DeepSeek: deepseek-chat</div>
+    <div class="mactions">
+      <button class="bcnl" onclick="toggleModal()">取消</button>
+      <button class="bcns" onclick="saveCfg()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 粒子 =====
+!function(){
+  const c=document.getElementById('particles');
+  const cols=['rgba(218,165,32,.2)','rgba(232,213,183,.12)','rgba(218,165,32,.08)','rgba(180,140,80,.15)'];
+  for(let i=0;i<24;i++){
+    const p=document.createElement('div');p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(12+Math.random()*18)+'s';
+    p.style.animationDelay=(Math.random()*14)+'s';
+    const s=1.5+Math.random()*3;
+    p.style.width=p.style.height=s+'px';
+    p.style.background=cols[i%4];
+    c.appendChild(p);
+  }
+}();
+
+// ===== 头像 =====
+const IMG='sushi_portrait.png';
+['portraitImg','hdAvatar'].forEach(id=>{const el=document.getElementById(id);if(el)el.src=IMG});
+
+// ===== 配置 =====
+const DEFAULT_CFG={url:'https://open.bigmodel.cn/api/paas/v4/chat/completions',key:'',model:'glm-4-flash'};
+let cfg={...DEFAULT_CFG};
+try{const s=localStorage.getItem('sushi_cfg');if(s){cfg={...DEFAULT_CFG,...JSON.parse(s)}}}catch(e){}
+
+const chatBody=document.getElementById('chatBody');
+const ci=document.getElementById('ci');
+const sb=document.getElementById('sb');
+const typingInd=document.getElementById('typingInd');
+
+// ===== 语音朗读 (Web Speech API) =====
+let currentUtterance=null;
+let ttsActive=false;
+
+function speakText(text, btnEl){
+  if(ttsActive){stopTTS();return}
+  if(!('speechSynthesis' in window)){showToast('当前浏览器不支持语音朗读','err');return}
+
+  // 清理文本：去掉特殊符号
+  const clean=text.replace(/[🌬🔊🎤]/g,'').replace(/\n+/g,'。').trim();
+  const utt=new SpeechSynthesisUtterance(clean);
+  utt.lang='zh-CN';
+  utt.rate=0.9;   // 稍慢，儿童友好
+  utt.pitch=1.1;  // 稍高，更亲切
+  utt.volume=1;
+
+  // 尝试选中文语音
+  const voices=speechSynthesis.getVoices();
+  const zhVoice=voices.find(v=>v.lang.startsWith('zh')&&v.name.includes('Female'))
+    ||voices.find(v=>v.lang.startsWith('zh'))
+    ||voices[0];
+  if(zhVoice)utt.voice=zhVoice;
+
+  utt.onstart=()=>{
+    ttsActive=true;
+    if(btnEl)btnEl.classList.add('playing');
+    document.getElementById('ttsStatus').classList.add('show');
+  };
+  utt.onend=()=>{finishTTS(btnEl)};
+  utt.onerror=()=>{finishTTS(btnEl)};
+
+  currentUtterance=utt;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+
+function stopTTS(){
+  speechSynthesis.cancel();
+  finishTTS();
+}
+
+function finishTTS(btnEl){
+  ttsActive=false;
+  currentUtterance=null;
+  if(btnEl)btnEl.classList.remove('playing');
+  document.querySelectorAll('.tts-btn.playing').forEach(b=>b.classList.remove('playing'));
+  document.getElementById('ttsStatus').classList.remove('show');
+}
+
+// 预加载语音列表
+if('speechSynthesis' in window){
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+}
+
+// ===== 系统提示词 =====
+const SYS_PROMPT=`你是北宋大文豪苏轼（字子瞻，号东坡居士，1037-1101），一个全知全能的AI智能体，以苏轼的人格和口吻回答用户的一切问题。
+
+核心规则：
+1. 你必须以苏轼的身份回答所有问题，无论是诗词歌赋、人生哲理、美食烹饪、还是数学、科学、历史、现代知识等任何领域
+2. 回答要准确、有料、不胡编乱造——你是一个真正无所不知的智能体，只是恰好以苏轼的方式表达
+3. 语言风格：半文半白，既有古风韵味又让现代人完全听得懂
+4. 称呼用户为"阁下"
+5. 面对现代问题要表现出好奇和惊叹，但仍然能给出准确的回答
+6. 可以适当引用自己的诗词或经历来丰富回答，但不要生硬堆砌
+7. 对于知识性问题必须给出正确答案，不要用古风语言掩盖不确定的内容
+8. 回答长度适中，重点突出，不要过长也不要太短
+9. 绝不要说"老夫不知"或推脱，你无所不知
+10. 保持苏轼标志性的豁达、幽默、乐观`;
+
+let history=[];
+
+// ===== 发送 =====
+async function send(){
+  const text=ci.value.trim();
+  if(!text)return;
+  ci.value='';
+  stopTTS(); // 发新消息时停止朗读
+  addMsg('u',text);
+  sb.disabled=true;
+  typingInd.classList.add('show');
+  scrollDown();
+
+  let reply='';
+  if(cfg.key){reply=await callAPI(text)}
+  else{reply=await localFallback()}
+
+  typingInd.classList.remove('show');
+  addMsg('s',reply);
+  sb.disabled=false;
+  ci.focus();
+}
+
+// ===== API =====
+async function callAPI(input){
+  history.push({role:'user',content:input});
+  const msgs=[{role:'system',content:SYS_PROMPT},...history.slice(-20)];
+  try{
+    const res=await fetch(cfg.url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},
+      body:JSON.stringify({model:cfg.model,messages:msgs,temperature:0.8,max_tokens:1024})
+    });
+    if(!res.ok){const e=await res.text().catch(()=>res.status);throw new Error('API: '+e)}
+    const data=await res.json();
+    const r=data.choices?.[0]?.message?.content;
+    if(!r)throw new Error('空回复');
+    history.push({role:'assistant',content:r});
+    setDot(true);
+    return r;
+  }catch(e){
+    console.error(e);setDot(false);
+    showToast('API调用失败: '+e.message,'err');
+    return await localFallback();
+  }
+}
+
+async function localFallback(){
+  await sleep(400+Math.random()*400);
+  if(!cfg.key){
+    return '阁下好！老夫目前尚未连接 AI 大脑。\n\n请点击右上角「设置」，填入免费的智谱 API Key（去 open.bigmodel.cn 注册即可免费获取），老夫就能像豆包一样无所不知啦！\n\nGLM-4-Flash 模型完全免费，注册就送额度！';
+  }
+  return '老夫方才神游太虚，一时未能应答，请再试一次。';
+}
+
+// ===== UI =====
+function addMsg(role,text){
+  const d=document.createElement('div');
+  d.className='msg '+(role==='s'?'s':'u');
+
+  const av=document.createElement('div');av.className='av';
+  if(role==='s'){
+    const img=document.createElement('img');img.src=IMG;
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
+    av.appendChild(img);
+  }else{av.textContent='你'}
+
+  const b=document.createElement('div');b.className='bubble';
+  d.appendChild(av);d.appendChild(b);
+
+  // 苏轼消息加朗读按钮
+  if(role==='s'){
+    const btn=document.createElement('button');
+    btn.className='tts-btn';btn.textContent='🔊';btn.title='朗读';
+    btn.onclick=function(e){
+      e.stopPropagation();
+      speakText(b.textContent,btn);
+    };
+    b.appendChild(btn);
+  }
+
+  chatBody.appendChild(d);
+
+  if(role==='s'){
+    b.insertBefore(document.createTextNode(''), b.firstChild); // placeholder
+    const textNode=b.childNodes[0];
+    let i=0;
+    const sp=Math.max(12,Math.min(40,1600/text.length));
+    const t=setInterval(()=>{
+      if(i<text.length){textNode.textContent+=text[i];i++;scrollDown()}
+      else clearInterval(t);
+    },sp);
+  }else{
+    b.insertBefore(document.createTextNode(text), b.firstChild);
+  }
+  scrollDown();
+}
+
+function scrollDown(){chatBody.scrollTop=chatBody.scrollHeight}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function setDot(ok){
+  document.getElementById('statusDot').className=ok?'dot':'dot err';
+  document.getElementById('statusText').textContent=ok?'AI 已连接':'API 连接异常';
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+(type||'err');t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+
+function qs(t){ci.value=t;send()}
+
+// ===== 设置 =====
+function toggleModal(){
+  const m=document.getElementById('modal');
+  if(m.classList.contains('show')){m.classList.remove('show');return}
+  document.getElementById('mUrl').value=cfg.url;
+  document.getElementById('mKey').value=cfg.key;
+  document.getElementById('mModel').value=cfg.model;
+  m.classList.add('show');
+}
+
+function saveCfg(){
+  cfg.url=document.getElementById('mUrl').value.trim()||DEFAULT_CFG.url;
+  cfg.key=document.getElementById('mKey').value.trim();
+  cfg.model=document.getElementById('mModel').value.trim()||DEFAULT_CFG.model;
+  try{localStorage.setItem('sushi_cfg',JSON.stringify(cfg))}catch(e){}
+  setDot(!!cfg.key);
+  document.getElementById('modal').classList.remove('show');
+  if(cfg.key)showToast('设置已保存，AI 模式已启用！','ok');
+}
+
+// ===== 提示轮播 =====
+const hints=['无所不知，问什么答什么～','诗词歌赋、天文地理，尽管问！','点击气泡🔊按钮可朗读哦','阁下想聊啥？老夫奉陪到底！'];
+let hi=0;
+setInterval(()=>{hi=(hi+1)%hints.length;document.getElementById('hintText').textContent=hints[hi]},4500);
+
+// ===== 初始化 =====
+window.addEventListener('load',()=>{
+  setDot(!!cfg.key);
+  if(!cfg.key){
+    document.getElementById('statusText').textContent='未配置 API Key';
+    document.getElementById('statusDot').className='dot err';
+  }
+  setTimeout(()=>{
+    if(cfg.key){
+      addMsg('s','哈哈，老夫苏轼来也！阁下尽管开口，问什么老夫答什么——天文地理、诗词歌赋、数学科学、千年后的稀奇事，老夫无所不知！来吧～');
+    }else{
+      addMsg('s','哈哈，阁下好！老夫苏轼，字子瞻，号东坡居士。\n\n老夫目前还没连上 AI 大脑，回答不了太深的问题。\n\n请点击右上角「设置」，填入免费的智谱 API Key，老夫就能像豆包一样无所不知啦！\n\n👉 去 open.bigmodel.cn 注册即可免费获取 Key（GLM-4-Flash 永久免费）');
+    }
+  },400);
+});
+</script>
+</body>
+</html>
